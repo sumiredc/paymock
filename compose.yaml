@@ -1,0 +1,11 @@
+services:
+  gateway:
+    build: ./gateway
+    ports:
+      - "8000:80"
+
+  auth:
+    build: ./auth
+    volumes:
+      - ./auth:/app
+    command: "cargo run"
