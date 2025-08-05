@@ -1,0 +1,3 @@
+```sh
+nginx -s reload
+```

@@ -3,9 +3,19 @@ services:
     build: ./gateway
     ports:
       - "8000:80"
+    volumes:
+      - ./gateway/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - auth
 
   auth:
     build: ./auth
     volumes:
       - ./auth:/app
+    command: "cargo run"
+
+  payment:
+    build: ./payment
+    volumes:
+      - ./payment:/app
     command: "cargo run"
