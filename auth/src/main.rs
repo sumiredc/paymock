@@ -1,8 +1,8 @@
+mod handler;
 mod usecase;
 
-use crate::usecase::login::LoginUseCase;
 use actix_cors::Cors;
-use actix_web::{App, HttpResponse, HttpServer, Responder, get, http::header, post};
+use actix_web::{App, HttpServer, http::header};
 use std::io::Result;
 
 #[actix_web::main]
@@ -20,33 +20,11 @@ async fn main() -> Result<()> {
                     .supports_credentials()
                     .max_age(3600),
             )
-            .service(verify)
-            .service(create)
-            .service(refresh)
+            .service(handler::verify)
+            .service(handler::login)
+            .service(handler::refresh)
     })
     .bind(addr)?
     .run()
     .await
-}
-
-#[get("/verify")]
-async fn verify() -> impl Responder {
-    // TODO
-    HttpResponse::Ok()
-}
-
-#[post("/login")]
-async fn create() -> impl Responder {
-    let uc = LoginUseCase::default();
-
-    match uc.execute() {
-        Ok(res) => HttpResponse::Ok().json(res),
-        Err(_) => HttpResponse::InternalServerError().finish(),
-    }
-}
-
-#[get("/refresh")]
-async fn refresh() -> impl Responder {
-    // TODO
-    HttpResponse::Ok()
 }

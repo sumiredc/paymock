@@ -1,6 +1,5 @@
 use chrono::{DateTime, Duration, Utc};
 use chrono_tz::{ParseError, Tz};
-use hmac::digest::InvalidLength;
 use jsonwebtoken::{EncodingKey, Header, encode, errors::Error};
 use serde::{Deserialize, Serialize};
 use std::result::Result;
@@ -9,6 +8,10 @@ use thiserror::Error;
 #[derive(Default)]
 pub struct LoginUseCase {}
 impl LoginUseCase {
+    pub fn new() -> Self {
+        Self {}
+    }
+
     pub fn execute(&self) -> Result<LoginResponse, LoginError> {
         // TODO: user_id, exp_min
         let access_token = self.generate_token(1, 15)?;
@@ -68,9 +71,6 @@ struct Claims {
 pub enum LoginError {
     #[error("Failed to generate token")]
     TokenGenerationFailed(#[from] Error),
-
-    #[error("Invalid secret")]
-    ConfigurationError(#[from] InvalidLength),
 
     #[error("Parse failed to timezone")]
     ParseError(#[from] ParseError),
