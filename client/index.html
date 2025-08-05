@@ -2,20 +2,46 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + TS</title>
+    <title>paymock</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   </head>
   <body>
     <main id="app">
       <div>
-        <div class="card">
-          <button id="login" type="button">ログイン</button>
-        </div>
-        <div class="card">
-          <input id="price" type="number" min="1" max="99999999" />
+        <section class="card" style="display: flex; align-items: center">
+          <div>
+            <button id="login" type="button">ログイン</button>
+            <span style="margin: 0 2rem">-></span>
+          </div>
+          <div>
+            <div style="text-align: left; margin-bottom: 1rem">
+              <label for="access_token" style="display: block"
+                >アクセストークン</label
+              >
+              <input id="access_token" type="text" readonly />
+              <input id="access_token_exp" type="text" readonly />
+            </div>
+            <div style="text-align: left">
+              <label for="refresh_token" style="display: block"
+                >リフレッシュトークン</label
+              >
+              <input id="refresh_token" type="text" readonly />
+              <input id="refresh_token_exp" type="text" readonly />
+            </div>
+          </div>
+        </section>
+        <hr />
+        <section class="card">
+          <input
+            id="price"
+            type="number"
+            min="1"
+            max="99999999"
+            value="12345"
+          />
           <button id="payment" type="button">支払う</button>
-        </div>
+        </section>
       </div>
     </main>
     <script type="module" src="/src/main.ts"></script>
