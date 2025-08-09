@@ -1,21 +1,35 @@
 use chrono::{DateTime, Duration, Utc};
-use chrono_tz::{ParseError, Tz};
-use jsonwebtoken::{EncodingKey, Header, encode, errors::Error};
+use chrono_tz::Tz;
+use jsonwebtoken::{EncodingKey, Header};
+use redis::{Client, Commands, RedisError};
 use serde::{Deserialize, Serialize};
 use std::result::Result;
 use thiserror::Error;
 
-#[derive(Default)]
-pub struct LoginUseCase {}
+pub struct LoginUseCase {
+    client: Client,
+}
 impl LoginUseCase {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(client: Client) -> Self {
+        Self { client }
     }
 
     pub fn execute(&self) -> Result<LoginResponse, LoginError> {
-        // TODO: user_id, exp_min
-        let access_token = self.generate_token(1, 15)?;
-        let refresh_token = self.generate_token(1, 1440)?;
+        let mut conn = self
+            .client
+            .get_connection()
+            .map_err(LoginError::RedisConnectionFailed)?;
+
+        // TODO: user_id, exp
+        let user_id = 1;
+        let access_token_exp = 15;
+        let refresh_token_exp = 1440;
+
+        let access_token = self.generate_token(user_id, access_token_exp)?;
+        let refresh_token = self.generate_token(user_id, refresh_token_exp)?;
+
+        conn.set::<String, usize, ()>(refresh_token.value.clone(), user_id)
+            .map_err(LoginError::RedisSetCommandFailed)?;
 
         Ok(LoginResponse {
             access_token,
@@ -31,7 +45,7 @@ impl LoginUseCase {
             exp: exp.timestamp(),
         };
 
-        let token = encode(
+        let token = jsonwebtoken::encode(
             &Header::default(),
             &claims,
             &EncodingKey::from_secret("dummy-secret".as_ref()),
@@ -69,11 +83,17 @@ struct Claims {
 
 #[derive(Error, Debug)]
 pub enum LoginError {
-    #[error("Failed to generate token")]
-    TokenGenerationFailed(#[from] Error),
+    #[error("Failed to generate token: {0}")]
+    TokenGenerationFailed(#[from] jsonwebtoken::errors::Error),
 
-    #[error("Parse failed to timezone")]
-    ParseError(#[from] ParseError),
+    #[error("Parse failed to timezone: {0}")]
+    ParseError(#[from] chrono::ParseError),
+
+    #[error("Failed to connect to Redis: {0}")]
+    RedisConnectionFailed(RedisError),
+
+    #[error("Failed to execute Redis SET command: {0}")]
+    RedisSetCommandFailed(RedisError),
 }
 
 #[derive(Serialize)]

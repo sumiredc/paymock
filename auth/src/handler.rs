@@ -1,6 +1,10 @@
 use crate::usecase::{login::LoginUseCase, verify::VerifyUseCase};
-use actix_web::{HttpResponse, Responder, get, post, web::Header};
+use actix_web::{
+    HttpResponse, Responder, get, post,
+    web::{Data, Header},
+};
 use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
+use redis::Client;
 
 #[get("/verify")]
 pub async fn verify(header: Header<Authorization<Bearer>>) -> impl Responder {
@@ -19,8 +23,8 @@ pub async fn verify(header: Header<Authorization<Bearer>>) -> impl Responder {
 }
 
 #[post("/login")]
-pub async fn login() -> impl Responder {
-    let uc = LoginUseCase::new();
+pub async fn login(redis_client: Data<Client>) -> impl Responder {
+    let uc = LoginUseCase::new(redis_client.as_ref().clone());
 
     match uc.execute() {
         Ok(res) => HttpResponse::Ok().json(res),
