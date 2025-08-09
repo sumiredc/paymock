@@ -2,20 +2,51 @@ services:
   gateway:
     build: ./gateway
     ports:
-      - "8000:80"
+      - 8000:80
     volumes:
       - ./gateway/conf.d:/etc/nginx/conf.d
     depends_on:
       - auth
+      - payment
 
   auth:
     build: ./auth
     volumes:
       - ./auth:/app
     command: "cargo run"
+    depends_on:
+      - authstore
+    
+  authstore:
+    build: ./authstore
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./authstore/conf:/usr/local/etc/redis
+      - authstore:/data
 
   payment:
     build: ./payment
     volumes:
       - ./payment:/app
     command: "cargo run"
+
+  datastore:
+    build: ./datastore
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - ./datastore/init:/docker-entrypoint-initdb.d
+      - ./datastore/conf:/etc/postgresql
+      - datastore:/var/lib/postgresql/data
+    env_file:
+      - datastore/.env
+
+  migration:
+    build: ./migration
+    volumes:
+      - ./migration:/app
+
+volumes:
+  authstore:
+  datastore:

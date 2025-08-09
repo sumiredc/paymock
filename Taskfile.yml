@@ -1,0 +1,12 @@
+version: "3"
+
+tasks:
+  authstore:
+    cmds:
+      - docker compose exec authstore redis-cli
+    silent: true
+
+  datastore:
+    cmds:
+      - docker compose exec datastore psql -U user -d paymock_db
+    silent: true
